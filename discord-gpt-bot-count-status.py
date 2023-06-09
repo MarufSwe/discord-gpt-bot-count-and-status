@@ -6,6 +6,7 @@ import openai
 load_dotenv()
 
 discord_token = ""
+
 intents = discord.Intents.default()
 intents.members = True
 intents.presences = True
