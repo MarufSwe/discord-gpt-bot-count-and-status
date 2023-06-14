@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import openai
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -39,6 +40,47 @@ async def user_count(guild):
         return len(guild.members)
     else:
         return 0
+
+
+async def last_day_message_count(channel):
+    # Get the current date
+    current_date = datetime.utcnow().date()
+    # Calculate the start and end times for the current date
+    start_time = datetime.combine(current_date, datetime.min.time())
+    end_time = datetime.combine(current_date, datetime.max.time())
+
+    # Count the messages within the time range
+    total_messages = 0
+    async for message in channel.history(after=start_time, before=end_time):
+        total_messages += 1
+
+    if total_messages > 0:
+        return f"Total messages today: {total_messages}"
+    else:
+        return "No messages found today."
+
+
+async def last_week_message_count(channel):  # with today
+    # Get the current date and time
+    current_datetime = datetime.utcnow()
+
+    # Calculate the start and end times for the last week
+    start_time = current_datetime - timedelta(weeks=1)
+    end_time = current_datetime
+
+    # Count the messages within the time range using pagination
+    total_messages = 0
+    async for message in channel.history(limit=None, after=start_time, before=end_time):
+        total_messages += 1
+
+    # Add the count of new messages sent after the function is called
+    async for message in channel.history(limit=None, after=end_time):
+        total_messages += 1
+
+    if total_messages > 0:
+        return f"Total messages from the last week: {total_messages}"
+    else:
+        return "No messages found today."
 
 
 async def user_presence_status(guild):
@@ -89,7 +131,8 @@ async def on_message(message):
 
     command, user_message = None, None
 
-    for text in ['/', '/count', '/status']:
+    # for text in ['/', '/count', '/status']:
+    for text in ['/', '/count', '/status', '/day', '/week']:
         if message.content.startswith(text):
             command = message.content.split(' ')[0]
             user_message = message.content.replace(text, '')
@@ -108,6 +151,16 @@ async def on_message(message):
         guild = message.guild
         presence_status = await user_presence_status(guild)
         await message.channel.send(presence_status)
+
+    if command == '/day':
+        channel = message.channel
+        message_count = await last_day_message_count(channel)
+        await message.channel.send(message_count)
+
+    if command == '/week':
+        channel = message.channel
+        message_count = await last_week_message_count(channel)
+        await message.channel.send(message_count)
 
     # Store guild and channel IDs
     active_guilds.add(message.guild.id)
