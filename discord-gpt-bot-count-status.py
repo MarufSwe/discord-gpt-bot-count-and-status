@@ -132,13 +132,13 @@ async def on_message(message):
     command, user_message = None, None
 
     # for text in ['/', '/count', '/status']:
-    for text in ['/', '/count', '/status', '/day', '/week']:
+    for text in ['/ai', '/count', '/status', '/day', '/week']:
         if message.content.startswith(text):
             command = message.content.split(' ')[0]
             user_message = message.content.replace(text, '')
             break
 
-    if command == '/':
+    if command == '/ai':
         bot_response = chatgpt_response(prompt=user_message)
         await message.channel.send(bot_response)
 
